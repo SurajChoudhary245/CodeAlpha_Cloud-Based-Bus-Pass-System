@@ -99,9 +99,9 @@ Add screenshots of:
 
 ## 🔗 Project Links
 
-- **GitHub Repo**: [your_repo_link_here]
-- **Live Frontend** (if hosted): [optional_link_here]
+- **GitHub Repo**: [https://github.com/SurajChoudhary245/Cloud-Based-Bus-Pass-System]
+
 
 ---
 
-> 🚀 *Built as part of internship task for CodeAlpha (Cloud Computing Domain)*
+> 🚀 *Built as part of internship task for CodeAlpha (Cloud Computing )*
