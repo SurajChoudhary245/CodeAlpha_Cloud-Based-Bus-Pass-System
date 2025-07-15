@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bus Pass Booking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 50px;
+      background-color: #f2f2f2;
+    }
+    form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    #response {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">Cloud-Based Bus Pass Form</h2>
+  <form id="busPassForm">
+    <label>Name:</label>
+    <input type="text" id="name" required />
+
+    <label>Email:</label>
+    <input type="email" id="email" required />
+
+    <label>Pass Type:</label>
+    <select id="pass_type" required>
+      <option value="">--Select--</option>
+      <option value="Monthly">Monthly</option>
+      <option value="Weekly">Weekly</option>
+      <option value="Student">Student</option>
+    </select>
+
+    <label>From Location:</label>
+    <input type="text" id="from_location" required />
+
+    <label>To Location:</label>
+    <input type="text" id="to_location" required />
+
+    <label>Valid From:</label>
+    <input type="date" id="valid_from" required />
+
+    <label>Valid Till:</label>
+    <input type="date" id="valid_till" required />
+
+    <button type="submit">Issue Bus Pass</button>
+  </form>
+
+  <p id="response"></p>
+
+  <script>
+    document.getElementById("busPassForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const payload = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        pass_type: document.getElementById("pass_type").value,
+        from_location: document.getElementById("from_location").value,
+        to_location: document.getElementById("to_location").value,
+        valid_from: document.getElementById("valid_from").value,
+        valid_till: document.getElementById("valid_till").value
+      };
+
+      const responseEl = document.getElementById("response");
+      responseEl.innerText = "⏳ Processing...";
+
+      try {
+        const res = await fetch("https://94y1tho4gd.execute-api.ap-south-1.amazonaws.com/issuepass", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)  // directly send payload
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const result = await res.json();
+        responseEl.innerText = result.message + (result.ticket_id ? `\n🎫 Ticket ID: ${result.ticket_id}` : "");
+
+      } catch (err) {
+        console.error("Error:", err);
+        responseEl.innerText = "❌ Failed to issue pass. Server unavailable or error occurred.";
+      }
+    });
+  </script>
+</body>
+</html>

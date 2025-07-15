@@ -1,0 +1,78 @@
+import pymysql
+import json
+
+# RDS credentials
+rds_host = "ticket-system.c76w26iu0fnd.ap-south-1.rds.amazonaws.com"
+db_user = "admin"
+db_password = "yourpassword123"
+db_name = "ticket_system"
+
+def get_dynamic_price(event_name, seat_no):
+    base_price = 100
+    if "VIP" in seat_no.upper():
+        return base_price * 2
+    elif "A" in seat_no.upper():
+        return base_price * 1.5
+    else:
+        return base_price
+
+def lambda_handler(event, context):
+    method = event["requestContext"]["http"]["method"]
+
+    if method == "OPTIONS":
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type"
+            },
+            "body": json.dumps("CORS OK")
+        }
+
+    body = json.loads(event["body"])
+    name = body.get("name")
+    email = body.get("email")
+    event_name = body.get("event_name")
+    event_date = body.get("event_date")
+    seat_no = body.get("seat_no")
+
+    price = get_dynamic_price(event_name, seat_no)
+
+    connection = pymysql.connect(
+        host=rds_host,
+        user=db_user,
+        password=db_password,
+        database=db_name
+    )
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT * FROM tickets WHERE event_name=%s AND event_date=%s AND seat_no=%s",
+            (event_name, event_date, seat_no)
+        )
+        result = cursor.fetchone()
+
+        if result:
+            message = "Seat already booked!"
+            status = "duplicate"
+        else:
+            cursor.execute(
+                "INSERT INTO tickets (name, email, event_name, event_date, seat_no, price) VALUES (%s, %s, %s, %s, %s, %s)",
+                (name, email, event_name, event_date, seat_no, price)
+            )
+            connection.commit()
+            message = f"Ticket booked for ₹{price}"
+            status = "success"
+
+    connection.close()
+
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        "body": json.dumps({"status": status, "message": message})
+    }
