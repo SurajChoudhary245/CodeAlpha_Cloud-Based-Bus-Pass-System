@@ -2,10 +2,11 @@
 <html>
 <head>
   <title>Bus Pass Booking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 50px;
+      margin: 20px;
       background-color: #f2f2f2;
     }
     form {
@@ -18,31 +19,41 @@
     }
     input, select {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       margin: 10px 0;
       border-radius: 6px;
       border: 1px solid #ccc;
+      font-size: 16px;
     }
     button {
-      padding: 10px 20px;
+      padding: 12px;
       background-color: #28a745;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 16px;
+      width: 100%;
     }
-    button:hover {
-      background-color: #218838;
+    button:disabled {
+      background-color: #6c757d;
     }
     #response {
       margin-top: 20px;
       text-align: center;
       font-weight: bold;
+      white-space: pre-line;
+    }
+    @media screen and (max-width: 600px) {
+      form {
+        margin: 10px;
+        padding: 15px;
+      }
     }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;">Cloud-Based Bus Pass Form</h2>
+  <h2 style="text-align:center;">🚌 Cloud-Based Bus Pass Form</h2>
   <form id="busPassForm">
     <label>Name:</label>
     <input type="text" id="name" required />
@@ -70,7 +81,7 @@
     <label>Valid Till:</label>
     <input type="date" id="valid_till" required />
 
-    <button type="submit">Issue Bus Pass</button>
+    <button type="submit" id="submitBtn">Issue Bus Pass</button>
   </form>
 
   <p id="response"></p>
@@ -79,36 +90,59 @@
     document.getElementById("busPassForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
+      const responseEl = document.getElementById("response");
+      const button = document.getElementById("submitBtn");
+
+      // Trimmed input values
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const pass_type = document.getElementById("pass_type").value.trim();
+      const from_location = document.getElementById("from_location").value.trim();
+      const to_location = document.getElementById("to_location").value.trim();
+      const valid_from = document.getElementById("valid_from").value;
+      const valid_till = document.getElementById("valid_till").value;
+
+      // Validate dates
+      const dateFrom = new Date(valid_from);
+      const dateTill = new Date(valid_till);
+      if (!valid_from || !valid_till || dateTill <= dateFrom) {
+        responseEl.innerText = "❗ 'Valid Till' must be after 'Valid From'.";
+        return;
+      }
+
       const payload = {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        pass_type: document.getElementById("pass_type").value,
-        from_location: document.getElementById("from_location").value,
-        to_location: document.getElementById("to_location").value,
-        valid_from: document.getElementById("valid_from").value,
-        valid_till: document.getElementById("valid_till").value
+        name,
+        email,
+        pass_type,
+        from_location,
+        to_location,
+        valid_from,
+        valid_till
       };
 
-      const responseEl = document.getElementById("response");
       responseEl.innerText = "⏳ Processing...";
+      button.disabled = true;
 
       try {
-        const res = await fetch("https://94y1tho4gd.execute-api.ap-south-1.amazonaws.com/issuepass", {
+        const res = await fetch("https://rigxy8pb36.execute-api.ap-south-1.amazonaws.com/default/issuepass", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(payload)  // directly send payload
+          body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
         const result = await res.json();
-        responseEl.innerText = result.message + (result.ticket_id ? `\n🎫 Ticket ID: ${result.ticket_id}` : "");
-
+        if (!res.ok) {
+          responseEl.innerText = `❌ ${result.message || 'Failed to issue pass.'}`;
+        } else {
+          responseEl.innerText = `✅ ${result.message}\n🎫 Ticket ID: ${result.ticket_id || 'N/A'}`;
+        }
       } catch (err) {
         console.error("Error:", err);
-        responseEl.innerText = "❌ Failed to issue pass. Server unavailable or error occurred.";
+        responseEl.innerText = "❌ Failed to connect to server. Please try again later.";
+      } finally {
+        button.disabled = false;
       }
     });
   </script>
