@@ -1,5 +1,5 @@
 
-# 🚌 Cloud-Based Bus Pass Booking System
+# 🚌 Cloud-Based Bus Pass System
 
 This project is a cloud-based ticket/pass issuing platform built using AWS services. It allows users to request a bus pass via a simple web interface, and the backend system generates a unique ticket ID, stores the data securely in a database, and sends a confirmation email using AWS SES.
 
